@@ -1,70 +1,130 @@
-import React from "react";
-import logo from "./ethereumLogo.png";
-import { addresses, abis } from "@project/contracts";
-import { gql } from "apollo-boost";
-import { ethers } from "ethers";
-import { useQuery } from "@apollo/react-hooks";
-import "./App.css";
+import React from "react"
+import { ethers } from "ethers"
+import "./App.css"
+import artifacts from "./artifacts.json"
 
-const GET_TRANSFERS = gql`
-  {
-    transfers(first: 10) {
-      id
-      from
-      to
-      value
+const isMetaMaskInstalled = () => {
+  const { ethereum } = window
+  return Boolean(ethereum && ethereum.isMetaMask)
+}
+class App extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      address: "",
+      greeting: "",
+      newGreeting: "",
+      balance: "",
+      provider: {},
     }
   }
-`;
 
-async function readOnchainBalance() {
-  // Should replace with the end-user wallet, e.g. Metamask
-  const defaultProvider = ethers.getDefaultProvider();
-  // Create an instance of ethers.Contract
-  // Read more about ethers.js on https://docs.ethers.io/ethers.js/html/api-contract.html
-  const ceaErc20 = new ethers.Contract(addresses.ceaErc20, abis.erc20, defaultProvider);
-  // A pre-defined address that owns some CEAERC20 tokens
-  const tokenBalance = await ceaErc20.balanceOf("0x3f8CB69d9c0ED01923F11c829BaE4D9a4CB6c82C");
-  console.log({ tokenBalance: tokenBalance.toString() });
-}
-
-function App() {
-  const { loading, error, data } = useQuery(GET_TRANSFERS);
-
-  React.useEffect(() => {
-    if (!loading && !error && data && data.transfers) {
-      console.log({ transfers: data.transfers });
+  async componentDidMount() {
+    if (window.web3 === undefined) {
+      return
     }
-  }, [loading, error, data]);
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="react-logo" />
-        <p>
-          Edit <code>packages/react-app/src/App.js</code> and save to reload.
-        </p>
-        <button onClick={() => readOnchainBalance()} style={{ display: "none" }}>
-          Read On-Chain Balance
-        </button>
-        <a
-          className="App-link"
-          href="https://ethereum.org/developers/#getting-started"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ marginTop: "0px" }}
-        >
-          Learn Ethereum
-        </a>
-        <a className="App-link" href="https://reactjs.org" target="_blank" rel="noopener noreferrer">
-          Learn React
-        </a>
-        <a className="App-link" href="https://thegraph.com/docs/quick-start" target="_blank" rel="noopener noreferrer">
-          Learn The Graph
-        </a>
-      </header>
-    </div>
-  );
+    const provider = await new ethers.providers.Web3Provider(
+      window.web3.currentProvider
+    )
+
+    // TODO is this specific to MetaMask?
+    // Should add check for MetaMask
+    // https://docs.metamask.io/guide/create-dapp.html
+    const { ethereum } = window
+    await ethereum.enable()
+
+    // TODO is this right?
+    // Currently using this generated address via Buidler EVM
+    // 0xc783df8a850f42e7f7e57013759c285caa701eb6
+    const address = ethereum.selectedAddress
+    let balance = await provider.getBalance(address)
+    balance = ethers.utils.formatEther(balance)
+
+    // connect the contract with a signer, which allows update methods
+    // vs. connecting via a Provider, which provides read-only access
+    const contract = new ethers.Contract(
+      artifacts.Greeter.address,
+      artifacts.Greeter.abi,
+      provider.getSigner()
+    )
+
+    const greeting = await contract.greet()
+
+    this.setState({
+      address,
+      balance,
+      provider,
+      greeting,
+      contract,
+    })
+  }
+
+  async updateGreeting() {
+    const tx = await this.state.contract.setGreeting(this.state.newGreeting)
+
+    // Wait until tx is mined
+    await tx.wait()
+
+    const greeting = await this.state.contract.greet()
+    this.setState({ ...this.state, greeting })
+  }
+
+  handleInputChange = event => {
+    this.setState({ ...this.state, newGreeting: event.target.value })
+  }
+
+  handleSubmit = event => {
+    event.preventDefault()
+    this.updateGreeting()
+  }
+
+  render() {
+    if (!isMetaMaskInstalled()) {
+      return (
+        <div className="App">
+          <section>
+            <h1>Hey there!</h1>
+            <h1>
+              You need to{" "}
+              <a
+                href="https://metamask.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                install MetaMask
+              </a>{" "}
+              to use this app.
+            </h1>
+          </section>
+        </div>
+      )
+    }
+    return (
+      <div className="App">
+        <section>
+          <h1>Welcome to Honeypot!</h1>
+          <h3>User address:</h3>
+          {this.state.address}
+          <h3>User balance:</h3>
+          {this.state.balance}
+          <h3>Contract greeting:</h3>
+          {this.state.greeting}
+          <h3>Set greeting:</h3>
+          <form onSubmit={this.handleSubmit}>
+            <input
+              type="text"
+              value={this.state.newGreeting}
+              onChange={this.handleInputChange}
+              placeholder="New greeting..."
+            ></input>
+
+            <button>Set</button>
+          </form>
+        </section>
+      </div>
+    )
+  }
 }
 
-export default App;
+export default App
