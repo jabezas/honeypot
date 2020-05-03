@@ -13,6 +13,7 @@ class App extends React.Component {
     this.state = {
       address: "",
       bidCount: "",
+      userBids: [],
       bid: "",
       balance: "",
       provider: {},
@@ -55,11 +56,28 @@ class App extends React.Component {
     const bidCountBN = await contract.getBidCount()
     const bidCount = bidCountBN.toNumber()
 
+    const userBidsRaw = await contract.getUserBids()
+    const userBids = userBidsRaw
+      .map(bid => bid.toNumber())
+      .filter(bid => bid !== 0)
+
+    // Any bid submission from user address
+    const filter = contract.filters.SubmitBid(null, null)
+    contract.on(filter, async (bid, address, amount) => {
+      // TODO need amount? Can't convert toNumber()
+      console.log("BidSumit event: ", bid.toNumber(), address, amount)
+      // TODO fetch bidCount
+      const bidCountBN = await contract.getBidCount()
+      const bidCount = bidCountBN.toNumber()
+      this.setState({...this.state, bidCount})
+    })
+
     this.setState({
       address,
       balance,
       provider,
       bidCount,
+      userBids,
       contract,
     })
   }
@@ -69,13 +87,21 @@ class App extends React.Component {
       value: ethers.utils.parseEther("1.0"),
     })
 
+    // TODO add pending/loading state
     // Wait until tx is mined
     await tx.wait()
 
     // TODO should we be saving contract in state? Or instantiate when needed?
     const bidCountBN = await this.state.contract.getBidCount()
     const bidCount = bidCountBN.toNumber()
-    this.setState({ ...this.state, bidCount, bid: "" })
+
+    // TODO best way fetch this?
+    const userBidsRaw = await this.state.contract.getUserBids()
+    const userBids = userBidsRaw
+      .map(bid => bid.toNumber())
+      .filter(bid => bid !== 0)
+
+    this.setState({ ...this.state, bidCount, userBids, bid: "" })
   }
 
   handleInputChange = event => {
@@ -118,6 +144,8 @@ class App extends React.Component {
           {this.state.balance}
           <h3>Bid count:</h3>
           {this.state.bidCount}
+          <h3>User bids:</h3>
+          {this.state.userBids}
           <h3>Submit bid</h3>
           <form onSubmit={this.handleSubmit}>
             <input

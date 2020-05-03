@@ -1,6 +1,6 @@
 {
   "TwoThirds": {
-    "address": "0xf784709d2317D872237C4bC22f867d1BAe2913AB",
+    "address": "0x500D1d6A4c7D8Ae28240b47c8FCde034D827fD5e",
     "abi": [
       {
         "inputs": [],
@@ -12,13 +12,13 @@
         "anonymous": false,
         "inputs": [
           {
-            "indexed": false,
+            "indexed": true,
             "internalType": "uint256",
             "name": "_bid",
             "type": "uint256"
           },
           {
-            "indexed": false,
+            "indexed": true,
             "internalType": "address",
             "name": "_bidder",
             "type": "address"
@@ -57,6 +57,21 @@
             "internalType": "uint256",
             "name": "bidCount",
             "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "getUserBids",
+        "outputs": [
+          {
+            "internalType": "uint256[100]",
+            "name": "userBids",
+            "type": "uint256[100]"
           }
         ],
         "payable": false,
