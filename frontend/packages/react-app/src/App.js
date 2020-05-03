@@ -12,8 +12,8 @@ class App extends React.Component {
     super(props)
     this.state = {
       address: "",
-      greeting: "",
-      newGreeting: "",
+      bidCount: "",
+      bid: "",
       balance: "",
       provider: {},
     }
@@ -27,6 +27,9 @@ class App extends React.Component {
     const provider = await new ethers.providers.Web3Provider(
       window.web3.currentProvider
     )
+
+    // TODO verify / catch network.
+    // Currently throws an error if on any network other than local
 
     // TODO is this specific to MetaMask?
     // Should add check for MetaMask
@@ -44,39 +47,44 @@ class App extends React.Component {
     // connect the contract with a signer, which allows update methods
     // vs. connecting via a Provider, which provides read-only access
     const contract = new ethers.Contract(
-      artifacts.Greeter.address,
-      artifacts.Greeter.abi,
+      artifacts.TwoThirds.address,
+      artifacts.TwoThirds.abi,
       provider.getSigner()
     )
 
-    const greeting = await contract.greet()
+    const bidCountBN = await contract.getBidCount()
+    const bidCount = bidCountBN.toNumber()
 
     this.setState({
       address,
       balance,
       provider,
-      greeting,
+      bidCount,
       contract,
     })
   }
 
-  async updateGreeting() {
-    const tx = await this.state.contract.setGreeting(this.state.newGreeting)
+  async submitBid() {
+    const tx = await this.state.contract.submitBid(this.state.bid, {
+      value: ethers.utils.parseEther("1.0"),
+    })
 
     // Wait until tx is mined
     await tx.wait()
 
-    const greeting = await this.state.contract.greet()
-    this.setState({ ...this.state, greeting })
+    // TODO should we be saving contract in state? Or instantiate when needed?
+    const bidCountBN = await this.state.contract.getBidCount()
+    const bidCount = bidCountBN.toNumber()
+    this.setState({ ...this.state, bidCount, bid: "" })
   }
 
   handleInputChange = event => {
-    this.setState({ ...this.state, newGreeting: event.target.value })
+    this.setState({ ...this.state, bid: event.target.value })
   }
 
   handleSubmit = event => {
     event.preventDefault()
-    this.updateGreeting()
+    this.submitBid()
   }
 
   render() {
@@ -108,15 +116,15 @@ class App extends React.Component {
           {this.state.address}
           <h3>User balance:</h3>
           {this.state.balance}
-          <h3>Contract greeting:</h3>
-          {this.state.greeting}
-          <h3>Set greeting:</h3>
+          <h3>Bid count:</h3>
+          {this.state.bidCount}
+          <h3>Submit bid</h3>
           <form onSubmit={this.handleSubmit}>
             <input
               type="text"
-              value={this.state.newGreeting}
+              value={this.state.bid}
               onChange={this.handleInputChange}
-              placeholder="New greeting..."
+              placeholder="New bid..."
             ></input>
 
             <button>Set</button>

@@ -1,28 +1,92 @@
 {
-  "Greeter": {
-    "address": "0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf",
+  "TwoThirds": {
+    "address": "0xf784709d2317D872237C4bC22f867d1BAe2913AB",
     "abi": [
       {
-        "inputs": [
-          {
-            "internalType": "string",
-            "name": "_greeting",
-            "type": "string"
-          }
-        ],
+        "inputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
         "type": "constructor"
       },
       {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_bid",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "_bidder",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "SubmitBid",
+        "type": "event"
+      },
+      {
         "constant": true,
         "inputs": [],
-        "name": "greet",
+        "name": "bidCost",
         "outputs": [
           {
-            "internalType": "string",
+            "internalType": "uint256",
             "name": "",
-            "type": "string"
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "getBidCount",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "bidCount",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "maxBids",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
           }
         ],
         "payable": false,
@@ -33,15 +97,15 @@
         "constant": false,
         "inputs": [
           {
-            "internalType": "string",
-            "name": "_greeting",
-            "type": "string"
+            "internalType": "uint256",
+            "name": "_bid",
+            "type": "uint256"
           }
         ],
-        "name": "setGreeting",
+        "name": "submitBid",
         "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
+        "payable": true,
+        "stateMutability": "payable",
         "type": "function"
       }
     ]
