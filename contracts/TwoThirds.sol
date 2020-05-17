@@ -12,7 +12,8 @@ contract TwoThirds {
     Bid[] bids;
 
     address public owner;
-    uint public bidCost = 1000000000000000000;
+    address public winner;
+    uint public bidCost = 1000000000000000000; // 1 ETH
     uint public maxBids = 5;
 
     constructor() public {
@@ -30,6 +31,27 @@ contract TwoThirds {
         emit SubmitBid(_bid, msg.sender, msg.value);
     }
 
+    function calculateWinner() public returns (address _winner) {
+        require(bids.length == maxBids, "Auction is still open");
+        uint256 twoThirdsAverage = calculateTwoThirdsAverage();
+        int256 lowestDifference = 100.0;
+
+        for (uint i = 0; i < bids.length; i++) {
+            int256 diff = int256(bids[i].bid - twoThirdsAverage);
+            if (diff < 0) {
+                diff = diff * -1; // get absolute diff - is there a better way?
+            }
+            if (diff < lowestDifference) {
+                lowestDifference = diff;
+                _winner = bids[i].bidder;
+            }
+        }
+        winner = _winner;
+        return _winner;
+    }
+
+    // VIEWS
+
     function calculateTwoThirdsAverage() public view returns (uint256 twoThirdsAverage) {
         require(bids.length == maxBids, "Auction is still open");
         uint total;
@@ -40,25 +62,6 @@ contract TwoThirds {
         return average * 2 / 3;
     }
 
-    function calculateWinner() public view returns (address winner) {
-        require(bids.length == maxBids, "Auction is still open");
-        uint256 twoThirdsAverage = calculateTwoThirdsAverage();
-        int256 lowestDifference = 100.0;
-
-        for (uint i = 0; i < bids.length; i++) {
-            int256 diff = int256(bids[i].bid - twoThirdsAverage);
-            if (diff < 0) {
-                diff = diff * -1;
-            }
-            if (diff < lowestDifference) {
-                lowestDifference = diff;
-                winner = bids[i].bidder;
-            }
-        }
-        return winner;
-    }
-
-    // VIEWS
 
     function getBidCount() public view returns (uint bidCount) {
         return bids.length;

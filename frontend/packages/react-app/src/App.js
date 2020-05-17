@@ -25,6 +25,8 @@ class App extends React.Component {
       userNetwork: "",
       address: "",
       bidCount: "",
+      maxBids: "",
+      remainingBids: "",
       userBids: [],
       bid: "",
       balance: "",
@@ -33,30 +35,35 @@ class App extends React.Component {
   }
 
   async componentDidMount() {
-    if (window.web3 === undefined) {
+    const { ethereum } = window
+    if (ethereum === undefined) {
       return
     }
 
+    // I believe we want to `ethereum`for this? Looks like window.web3 will stop being injected by 8/31/20:
+    // https://github.com/MetaMask/metamask-extension/issues/8077#issuecomment-622191567
+    // const provider = await new ethers.providers.Web3Provider(ethereum)
     const provider = await new ethers.providers.Web3Provider(
       window.web3.currentProvider
     )
 
-    // TODO is this specific to MetaMask?
-    // Should add check for MetaMask
-    // https://docs.metamask.io/guide/create-dapp.html
-    const { ethereum } = window
+    // TODO updated, this is deprecated:
+    // https://docs.metamask.io/guide/ethereum-provider.html#methods-new-api
     await ethereum.enable()
 
     // Check user's Ethereum network
+    // TODO update, this is deprecated:
+    // https://docs.metamask.io/guide/ethereum-provider.html#ethereum-networkversion-deprecated
+    // Changing network will no longer reload the page
+    // Use `chainChanged`? OR ether.js's getNetwork()?
     const userNetwork = ethereum.networkVersion
     if (userNetwork !== this.state.appNetwork) {
       this.setState({ ...this.state, userNetwork })
       return
     }
 
-    // TODO is this right?
-    // Currently using this generated address via Buidler EVM
-    // 0xc783df8a850f42e7f7e57013759c285caa701eb6
+    // TODO update, this is deprecated: https://docs.metamask.io/guide/ethereum-provider.html#ethereum-selectedaddress-deprecated
+    // Use provider.getSigner().getAddress() ?
     const address = ethereum.selectedAddress
     let balance = await provider.getBalance(address)
     balance = ethers.utils.formatEther(balance)
@@ -71,6 +78,11 @@ class App extends React.Component {
 
     const bidCountBN = await contract.getBidCount()
     const bidCount = bidCountBN.toNumber()
+
+    const maxBidsBN = await contract.maxBids()
+    const maxBids = maxBidsBN.toNumber()
+
+    const remainingBids = maxBids - bidCount
 
     const userBidsRaw = await contract.getUserBids()
     const userBids = userBidsRaw
@@ -93,6 +105,8 @@ class App extends React.Component {
       balance,
       provider,
       bidCount,
+      maxBids,
+      remainingBids,
       userBids,
       contract,
       userNetwork,
@@ -100,9 +114,25 @@ class App extends React.Component {
   }
 
   async submitBid() {
-    const tx = await this.state.contract.submitBid(this.state.bid, {
-      value: ethers.utils.parseEther("1.0"),
-    })
+    let tx
+
+    try {
+      tx = await this.state.contract.submitBid(this.state.bid, {
+        value: ethers.utils.parseEther("1.0"),
+      })
+    } catch (e) {
+      // TODO toast notification(?) that auction is closed?
+      // OR just disable bid submission functionality once remainingBids === 0?
+      let revertMessage = e
+      if (e.data && e.data.message) {
+        revertMessage = e.data.message.replace(
+          "VM Exception while processing transaction: revert ",
+          ""
+        )
+      }
+      this.setState({ ...this.state, bid: "" })
+      return
+    }
 
     // TODO add pending/loading state
     // Wait until tx is mined
@@ -112,15 +142,18 @@ class App extends React.Component {
     const bidCountBN = await this.state.contract.getBidCount()
     const bidCount = bidCountBN.toNumber()
 
+    const remainingBids = this.state.maxBids - bidCount
+
     // TODO best way fetch this?
     const userBidsRaw = await this.state.contract.getUserBids()
     const userBids = userBidsRaw
       .map(bid => bid.toNumber())
       .filter(bid => bid !== 0)
 
-    this.setState({ ...this.state, bidCount, userBids, bid: "" })
+    this.setState({ ...this.state, bidCount, remainingBids, userBids, bid: "" })
   }
 
+  // TODO only accept integer inputs
   handleInputChange = event => {
     this.setState({ ...this.state, bid: event.target.value })
   }
@@ -151,7 +184,10 @@ class App extends React.Component {
         </div>
       )
     }
-    if (this.state.userNetwork !== this.state.appNetwork) {
+    if (
+      this.state.userNetwork &&
+      this.state.userNetwork !== this.state.appNetwork
+    ) {
       return (
         <div className="App">
           <section>
@@ -176,10 +212,25 @@ class App extends React.Component {
           {this.state.address}
           <h3>User balance:</h3>
           {this.state.balance}
+          <h3>Max bids:</h3>
+          {this.state.maxBids}
           <h3>Bid count:</h3>
           {this.state.bidCount}
+          <h3>Remaining bids:</h3>
+          {this.state.remainingBids}
           <h3>User bids:</h3>
-          {this.state.userBids}
+          <ul
+            style={{
+              display: `flex`,
+              flexDirection: `column`,
+              alignItems: `center`,
+            }}
+          >
+            {this.state.userBids.map((bid, i) => {
+              return <li key={i}>{bid}</li>
+            })}
+          </ul>
+
           <h3>Submit bid</h3>
           <form onSubmit={this.handleSubmit}>
             <input

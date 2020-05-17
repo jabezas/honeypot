@@ -1,6 +1,6 @@
 {
   "TwoThirds": {
-    "address": "0x500D1d6A4c7D8Ae28240b47c8FCde034D827fD5e",
+    "address": "0x038B86d9d8FAFdd0a02ebd1A476432877b0107C8",
     "abi": [
       {
         "inputs": [],
@@ -46,6 +46,36 @@
         ],
         "payable": false,
         "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "calculateTwoThirdsAverage",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "twoThirdsAverage",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [],
+        "name": "calculateWinner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "_winner",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
         "type": "function"
       },
       {
@@ -121,6 +151,21 @@
         "outputs": [],
         "payable": true,
         "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "winner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
         "type": "function"
       }
     ]
