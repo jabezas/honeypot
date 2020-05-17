@@ -7,10 +7,22 @@ const isMetaMaskInstalled = () => {
   const { ethereum } = window
   return Boolean(ethereum && ethereum.isMetaMask)
 }
+
+const networkMap = {
+  "1": "Main Ethereum Network",
+  "2": "Morden Test network",
+  "3": "Ropsten Test Network",
+  "4": "Rinkeby Test Network",
+  "5": "Goerli Test Network",
+  "42": "Kovan Test Network",
+  "31337": "Localhost 8545",
+}
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      appNetwork: "31337", // TODO change once deployed
+      userNetwork: "",
       address: "",
       bidCount: "",
       userBids: [],
@@ -29,14 +41,18 @@ class App extends React.Component {
       window.web3.currentProvider
     )
 
-    // TODO verify / catch network.
-    // Currently throws an error if on any network other than local
-
     // TODO is this specific to MetaMask?
     // Should add check for MetaMask
     // https://docs.metamask.io/guide/create-dapp.html
     const { ethereum } = window
     await ethereum.enable()
+
+    // Check user's Ethereum network
+    const userNetwork = ethereum.networkVersion
+    if (userNetwork !== this.state.appNetwork) {
+      this.setState({ ...this.state, userNetwork })
+      return
+    }
 
     // TODO is this right?
     // Currently using this generated address via Buidler EVM
@@ -69,7 +85,7 @@ class App extends React.Component {
       // TODO fetch bidCount
       const bidCountBN = await contract.getBidCount()
       const bidCount = bidCountBN.toNumber()
-      this.setState({...this.state, bidCount})
+      this.setState({ ...this.state, bidCount })
     })
 
     this.setState({
@@ -79,6 +95,7 @@ class App extends React.Component {
       bidCount,
       userBids,
       contract,
+      userNetwork,
     })
   }
 
@@ -130,6 +147,23 @@ class App extends React.Component {
               </a>{" "}
               to use this app.
             </h1>
+          </section>
+        </div>
+      )
+    }
+    if (this.state.userNetwork !== this.state.appNetwork) {
+      return (
+        <div className="App">
+          <section>
+            <h1>Hey there!</h1>
+            <h2>
+              Your Ethereum network is currently set to the "
+              {networkMap[this.state.userNetwork]}".
+            </h2>
+            <h2>
+              You must change your network to "
+              {networkMap[this.state.appNetwork]}" in order to use this app.
+            </h2>
           </section>
         </div>
       )
