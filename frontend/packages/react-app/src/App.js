@@ -1,5 +1,7 @@
 import React from "react"
 import { ethers } from "ethers"
+
+import Header from "./components/Header/index.js"
 import "./App.css"
 import artifacts from "./artifacts.json"
 
@@ -35,6 +37,8 @@ class App extends React.Component {
   }
 
   async componentDidMount() {
+    // TODO fail gracefully if contract not deployed
+
     const { ethereum } = window
     if (ethereum === undefined) {
       return
@@ -47,6 +51,7 @@ class App extends React.Component {
       window.web3.currentProvider
     )
 
+    // TODO when do we want to display this? After onboarding?
     // TODO updated, this is deprecated:
     // https://docs.metamask.io/guide/ethereum-provider.html#methods-new-api
     await ethereum.enable()
@@ -206,6 +211,7 @@ class App extends React.Component {
     }
     return (
       <div className="App">
+        <Header />
         <section>
           <h1>Welcome to Honeypot!</h1>
           <h3>User address:</h3>

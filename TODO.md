@@ -5,6 +5,10 @@
   - Make it a bounty
   - Have script that pings it every x minutes
   - Have final bid trigger it
+- Params to set on new game creation?
+  - Total # of bids allowed for the game
+  - Cost per bid (i.e. set to something other than 1 ETH?)
+  - Min & max bid (i.e. set to something other than 1 - 100?)
 - Listen for events
   - New bids
   - Game completions
