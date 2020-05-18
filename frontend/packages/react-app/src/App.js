@@ -2,6 +2,7 @@ import React from "react"
 import { ethers } from "ethers"
 
 import Header from "./components/Header/index.js"
+import Footer from "./components/Footer/index.js"
 import "./App.css"
 import artifacts from "./artifacts.json"
 
@@ -249,6 +250,7 @@ class App extends React.Component {
             <button>Set</button>
           </form>
         </section>
+        <Footer />
       </div>
     )
   }
