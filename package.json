@@ -10,7 +10,8 @@
   "scripts": {
     "test": "buidler test",
     "deploy:local": "npx buidler run --network localhost scripts/deploy.ts",
-    "start": "cd frontend && yarn react-app:start"
+    "start:node": "npx buidler node",
+    "start:app": "cd frontend && yarn react-app:start"
   },
   "devDependencies": {
     "@nomiclabs/buidler": "^1.3.2",
