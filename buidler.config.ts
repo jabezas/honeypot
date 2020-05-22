@@ -26,7 +26,7 @@ const REMOTE_NETWORKS_ACCOUNT_PRIVATE_KEY =
 
 module.exports = {
   solc: {
-    version: "0.5.15",
+    version: "0.6.8",
   },
   networks: {
     buidlerevm: {
