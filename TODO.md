@@ -1,6 +1,8 @@
 # Smart contract
 
-- Allow smart contract to hold a list of smart contracts
+- How to manage new game creation?
+  - Allow smart contract to hold a list of smart contracts?
+  
 - Figure out how to trigger reveal phase / winner
   - Make it a bounty
   - Have script that pings it every x minutes
@@ -9,6 +11,7 @@
   - Total # of bids allowed for the game
   - Cost per bid (i.e. set to something other than 1 ETH?)
   - Min & max bid (i.e. set to something other than 1 - 100?)
+    - How to handle duplicate bids?
 - Listen for events
   - New bids
   - Game completions
