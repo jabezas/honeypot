@@ -3,9 +3,9 @@ pragma solidity ^0.6.8;
 import "@nomiclabs/buidler/console.sol";
 
 contract TwoThirds {
-    event CreateGame(uint indexed _index, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBid);
-    event SubmitBid(uint indexed _bid, address indexed _bidder, uint amount); // need amount?
-    event CompleteGame(uint indexed _index, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBid, address indexed _winner);
+    event CreateGame(uint indexed _index, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue);
+    event SubmitBid(uint indexed _gameIndex, uint indexed _bid, address indexed _bidder, uint amount);
+    event CompleteGame(uint indexed _index, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue, address indexed _winner);
 
     struct Bid {
         uint bid;
@@ -63,7 +63,7 @@ contract TwoThirds {
 
         game.bids[game.bidCount] = Bid({ bid: _bid, bidder: msg.sender });
         game.bidCount++;
-        emit SubmitBid(_bid, msg.sender, msg.value);
+        emit SubmitBid(_gameIndex, _bid, msg.sender, msg.value);
     }
 
     function calculateGameWinner(uint _gameIndex) public returns (address payable _winner) {
@@ -84,6 +84,7 @@ contract TwoThirds {
             }
         }
         game.winner = _winner;
+        emit CompleteGame(_gameIndex, game.maxBids, game.bidCost, game.minBidValue, game.maxBidValue, _winner);
         return _winner;
     }
 

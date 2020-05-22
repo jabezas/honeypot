@@ -55,9 +55,13 @@ describe("TwoThirds contract", () => {
     let gameBidCount = await contractWithAccountSigner.getGameBidCount("0")
     expect(gameBidCount).to.equal(0)
 
-    await contractWithAccountSigner.submitBid("0", "3", {
-      value: ethers.utils.parseEther("1.0"),
-    })
+    await expect(
+      contractWithAccountSigner.submitBid("0", "3", {
+        value: ethers.utils.parseEther("1.0"),
+      })
+    )
+      .to.emit(contract, "SubmitBid")
+      .withArgs(0, 3, account._address, ethers.utils.parseEther("1.0"))
 
     gameBidCount = await contractWithAccountSigner.getGameBidCount("0")
     expect(gameBidCount).to.equal(1)
@@ -256,7 +260,9 @@ describe("TwoThirds contract", () => {
     )
     expect(twoThirdsAvg.toNumber()).to.equal(2.0)
 
-    await contractWithAccountSigner.calculateGameWinner("0")
+    await expect(contractWithAccountSigner.calculateGameWinner("0"))
+      .to.emit(contract, "CompleteGame")
+      .withArgs(0, 5, ethers.utils.parseEther("1.0"), 1, 10, account._address)
     const winner = await contractWithAccountSigner.getGameWinner("0")
 
     expect(winner).to.equal(account._address)
