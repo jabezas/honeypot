@@ -234,6 +234,24 @@
         "type": "function"
       },
       {
+        "inputs": [],
+        "name": "getAllGames",
+        "outputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "ids",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "winners",
+            "type": "address[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
         "inputs": [
           {
             "internalType": "uint256",
@@ -305,7 +323,7 @@
       },
       {
         "inputs": [],
-        "name": "getGames",
+        "name": "getUserGames",
         "outputs": [
           {
             "internalType": "uint256[]",

@@ -134,7 +134,7 @@ contract TwoThirds {
         return userBids;
     }
 
-    function getGames() public view returns (uint[] memory ids, address[] memory winners) {
+    function getUserGames() public view returns (uint[] memory ids, address[] memory winners) {
         uint index = 0;
         address[] memory winners = new address[](games.length);
         uint[]    memory ids = new uint[](games.length);
@@ -150,6 +150,17 @@ contract TwoThirds {
                     }
                 }
             }
+        }
+        return (ids, winners);
+    }
+
+    function getAllGames() public view returns (uint[] memory ids, address[] memory winners) {
+        uint[]    memory ids = new uint[](games.length);
+        address[] memory winners = new address[](games.length);
+
+        for (uint i = 0; i < games.length; i++) {
+            ids[i] = games[i].id;
+            winners[i] = games[i].winner;
         }
         return (ids, winners);
     }

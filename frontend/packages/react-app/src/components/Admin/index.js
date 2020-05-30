@@ -23,6 +23,11 @@ const networkMap = {
 
 const Page = styled.div`
   padding: 5rem 10rem;
+  display: flex;
+`
+
+const Section = styled.section`
+  flex: 0 0 50%;
 `
 
 const Form = styled.form`
@@ -55,6 +60,7 @@ class Admin extends React.Component {
       balance: "",
       provider: {},
       gameCount: "",
+      games: [],
       // form data
       newGameMaxBids: "",
       newGameBidCost: "",
@@ -112,12 +118,22 @@ class Admin extends React.Component {
     const gameCountBN = await contract.getGameCount()
     const gameCount = gameCountBN.toNumber()
 
+    const gamesData = await contract.getAllGames()
+    const [gameIds, winners] = gamesData
+    const games = gameIds.map(id => {
+      return {
+        id: id.toNumber(),
+        winner: winners[id],
+      }
+    })
+
     this.setState({
       address,
       isOwner,
       balance,
       provider,
       gameCount,
+      games,
       contract,
       userNetwork,
     })
@@ -161,9 +177,19 @@ class Admin extends React.Component {
     const gameCountBN = await this.state.contract.getGameCount()
     const gameCount = gameCountBN.toNumber()
 
+    const gamesData = await this.state.contract.getAllGames()
+    const [gameIds, winners] = gamesData
+    const games = gameIds.map(id => {
+      return {
+        id: id.toNumber(),
+        winner: winners[id],
+      }
+    })
+
     this.setState({
       ...this.state,
       gameCount,
+      games,
       newGameMaxBids: "",
       newGameBidCost: "",
       newGameMinBidValue: "",
@@ -242,7 +268,7 @@ class Admin extends React.Component {
       <div className="App">
         <Header />
         <Page>
-          <section>
+          <Section>
             <h1>Admin page</h1>
 
             <h3>User address:</h3>
@@ -299,7 +325,19 @@ class Admin extends React.Component {
               </Label>
               <Button disabled={!isFormValid}>Create</Button>
             </Form>
-          </section>
+          </Section>
+          <Section>
+            <h3>View games</h3>
+            <ul>
+              {this.state.games.map(game => {
+                return (
+                  <li key={game.id}>
+                    Game {game.id} winner: {game.winner}
+                  </li>
+                )
+              })}
+            </ul>
+          </Section>
         </Page>
         <Footer />
       </div>

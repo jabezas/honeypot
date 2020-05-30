@@ -15,7 +15,7 @@ describe("TwoThirds contract", () => {
     )
   })
 
-  it("should allow game creation", async () => {
+  it.only("should allow game creation", async () => {
     const factory = await ethers.getContractFactory("TwoThirds")
     const contract = await factory.deploy()
 
@@ -29,6 +29,15 @@ describe("TwoThirds contract", () => {
 
     gameCount = await contractWithSigner.getGameCount()
     expect(gameCount).to.equal(1)
+
+    await contractWithSigner.createGame("5", "1000000000000000000", "1", "10")
+
+    gameCount = await contractWithSigner.getGameCount()
+    expect(gameCount).to.equal(2)
+
+    const gameData = await contractWithSigner.getUserGames()
+    const [gameIds, winners] = gameData
+    console.log({ gameIds, winners })
   })
 
   it("should allow bid submission", async () => {
@@ -215,7 +224,7 @@ describe("TwoThirds contract", () => {
     )
   })
 
-  it.only("should complete a game", async () => {
+  it("should complete a game", async () => {
     const factory = await ethers.getContractFactory("TwoThirds")
     const contract = await factory.deploy()
 
@@ -268,7 +277,7 @@ describe("TwoThirds contract", () => {
     expect(winner).to.equal(account._address)
 
     // Query games
-    const gameData = await contractWithAccountSigner.getGames()
+    const gameData = await contractWithAccountSigner.getUserGames()
     const [gameIds, winners] = gameData
     const games = []
 
