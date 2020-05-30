@@ -215,7 +215,7 @@ describe("TwoThirds contract", () => {
     )
   })
 
-  it("should complete auction", async () => {
+  it.only("should complete a game", async () => {
     const factory = await ethers.getContractFactory("TwoThirds")
     const contract = await factory.deploy()
 
@@ -266,5 +266,21 @@ describe("TwoThirds contract", () => {
     const winner = await contractWithAccountSigner.getGameWinner("0")
 
     expect(winner).to.equal(account._address)
+
+    // Query games
+    const gameData = await contractWithAccountSigner.getGames()
+    const [gameIds, winners] = gameData
+    const games = []
+
+    for (i = 0; i < gameIds.length; i++) {
+      const game = {
+        id: gameIds[i],
+        winner: winners[i],
+      }
+      games.push(game)
+    }
+
+    expect(games[0].id.toNumber()).to.equal(0)
+    expect(games[0].winner).to.equal(account._address)
   })
 })

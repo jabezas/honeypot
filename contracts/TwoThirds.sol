@@ -1,21 +1,22 @@
 pragma solidity ^0.6.8;
 
+// TODO lint on save
+
 import "@nomiclabs/buidler/console.sol";
 
 contract TwoThirds {
-    event CreateGame(uint indexed _index, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue);
-    event SubmitBid(uint indexed _gameIndex, uint indexed _bid, address indexed _bidder, uint amount);
-    event CompleteGame(uint indexed _index, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue, address indexed _winner);
+    event CreateGame(uint indexed _id, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue);
+    event SubmitBid(uint indexed _gameId, uint indexed _bid, address indexed _bidder, uint amount);
+    event CompleteGame(uint indexed _id, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue, address indexed _winner);
 
     struct Bid {
         uint bid;
         address payable bidder;
     }
-
+    
     struct Game {
-        // TODO `bids` better as an array?
-        // couldn't figure out how to create a game with empty bids
-        mapping(uint => Bid) bids;
+        uint id;
+        mapping(uint256 => Bid) bids;
         uint bidCount;
         uint maxBids;
         uint bidCost;
@@ -23,7 +24,7 @@ contract TwoThirds {
         uint maxBidValue;
         address payable winner; // TODO add winningBid?
     }
-    Game[] games;
+    Game[] public games;
 
     address public owner;
 
@@ -35,9 +36,10 @@ contract TwoThirds {
     function createGame(uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue) public payable {
         require(msg.sender == owner, "You don't have permisison to create a game.");
 
-        console.log("Creating a game, index: ", games.length);
+        console.log("Creating a game, id: ", games.length);
 
         games.push(Game({
+            id: games.length,
             maxBids: _maxBids,
             bidCount: 0,
             bidCost: _bidCost,
@@ -45,12 +47,13 @@ contract TwoThirds {
             maxBidValue: _maxBidValue,
             winner: address(0)
         }));
+
         emit CreateGame(games.length - 1, _maxBids, _bidCost, _minBidValue, _maxBidValue);
     }
 
-    function submitBid(uint _gameIndex, uint _bid) public payable {
-        require(games.length > _gameIndex, "Game doesn't exist.");
-        Game storage game = games[_gameIndex];
+    function submitBid(uint _gameId, uint _bid) public payable {
+        require(games.length > _gameId, "Game doesn't exist.");
+        Game storage game = games[_gameId];
 
         require(game.bidCount < game.maxBids, "Game is closed.");
         // TODO how to include game values in revert messages?
@@ -63,13 +66,13 @@ contract TwoThirds {
 
         game.bids[game.bidCount] = Bid({ bid: _bid, bidder: msg.sender });
         game.bidCount++;
-        emit SubmitBid(_gameIndex, _bid, msg.sender, msg.value);
+        emit SubmitBid(_gameId, _bid, msg.sender, msg.value);
     }
 
-    function calculateGameWinner(uint _gameIndex) public returns (address payable _winner) {
-        Game storage game = games[_gameIndex];
+    function calculateGameWinner(uint _gameId) public returns (address payable _winner) {
+        Game storage game = games[_gameId];
         require(game.bidCount == game.maxBids, "Game is still open.");
-        uint256 twoThirdsAverage = calculateGameTwoThirdsAverage(_gameIndex);
+        uint256 twoThirdsAverage = calculateGameTwoThirdsAverage(_gameId);
 
         int256 lowestDifference = int256(game.maxBidValue);
 
@@ -84,7 +87,7 @@ contract TwoThirds {
             }
         }
         game.winner = _winner;
-        emit CompleteGame(_gameIndex, game.maxBids, game.bidCost, game.minBidValue, game.maxBidValue, _winner);
+        emit CompleteGame(_gameId, game.maxBids, game.bidCost, game.minBidValue, game.maxBidValue, _winner);
         return _winner;
     }
 
@@ -93,8 +96,8 @@ contract TwoThirds {
     // TODO how to fetch games?
     // TODO how to fetch all games a user has bids in?
 
-    function calculateGameTwoThirdsAverage(uint _gameIndex) public view returns (uint256 twoThirdsAverage) {
-        Game storage game = games[_gameIndex];
+    function calculateGameTwoThirdsAverage(uint _gameId) public view returns (uint256 twoThirdsAverage) {
+        Game storage game = games[_gameId];
         require(game.bidCount == game.maxBids, "Game is still open.");
 
         uint total;
@@ -109,16 +112,16 @@ contract TwoThirds {
         return games.length;
     }
 
-    function getGameBidCount(uint _gameIndex) public view returns (uint bidCount) {
-        return games[_gameIndex].bidCount;
+    function getGameBidCount(uint _gameId) public view returns (uint bidCount) {
+        return games[_gameId].bidCount;
     }
 
-    function getGameWinner(uint _gameIndex) public view returns (address winner) {
-        return games[_gameIndex].winner;
+    function getGameWinner(uint _gameId) public view returns (address winner) {
+        return games[_gameId].winner;
     }
 
-    function getGameUserBids(uint _gameIndex) public view returns (uint[] memory) {
-        Game storage game = games[_gameIndex];
+    function getGameUserBids(uint _gameId) public view returns (uint[] memory) {
+        Game storage game = games[_gameId];
         uint[] memory userBids = new uint[](game.bidCount);
 
         uint index = 0;
@@ -129,5 +132,25 @@ contract TwoThirds {
             }
         }
         return userBids;
+    }
+
+    function getGames() public view returns (uint[] memory ids, address[] memory winners) {
+        uint index = 0;
+        address[] memory winners = new address[](games.length);
+        uint[]    memory ids = new uint[](games.length);
+
+        for (uint i = 0; i < games.length; i++) {
+            if (games[i].bidCount == games[i].maxBids) {
+                for (uint j = 0; j < games[i].bidCount; j++){
+                    if (games[i].bids[j].bidder == msg.sender) {
+                        winners[index] = games[i].winner;
+                        ids[index] = games[i].id;
+                        index++;
+                        break;
+                    }
+                }
+            }
+        }
+        return (ids, winners);
     }
 }
