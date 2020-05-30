@@ -1,5 +1,6 @@
 import React from "react"
 import { ethers } from "ethers"
+import styled from "styled-components"
 
 import Header from "../Header/index.js"
 import Footer from "../Footer/index.js"
@@ -20,7 +21,29 @@ const networkMap = {
   "31337": "Localhost 8545",
 }
 
-// TODO refactor for multigames
+const Page = styled.div`
+  padding: 5rem 10rem;
+`
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+`
+
+const Label = styled.label`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+
+  span {
+    margin-bottom: 0.4rem;
+  }
+`
+
+const Button = styled.button`
+  max-width: 200px;
+`
 class Admin extends React.Component {
   constructor(props) {
     super(props)
@@ -28,14 +51,15 @@ class Admin extends React.Component {
       appNetwork: "31337", // TODO change once deployed
       userNetwork: "",
       address: "",
-      gameCount: "",
-      // bidCount: "",
-      // maxBids: "",
-      // remainingBids: "",
-      // userBids: [],
-      // bid: "",
+      isOwner: false,
       balance: "",
       provider: {},
+      gameCount: "",
+      // form data
+      newGameMaxBids: "",
+      newGameBidCost: "",
+      newGameMinBidValue: "",
+      newGameMaxBidValue: "",
     }
   }
 
@@ -82,65 +106,50 @@ class Admin extends React.Component {
       provider.getSigner()
     )
 
+    const owner = await contract.owner()
+    const isOwner = address === owner.toLowerCase()
+
     const gameCountBN = await contract.getGameCount()
     const gameCount = gameCountBN.toNumber()
 
-    // const bidCountBN = await contract.getBidCount()
-    // const bidCount = bidCountBN.toNumber()
-
-    // const maxBidsBN = await contract.maxBids()
-    // const maxBids = maxBidsBN.toNumber()
-
-    // const remainingBids = maxBids - bidCount
-
-    // const userBidsRaw = await contract.getUserBids()
-    // const userBids = userBidsRaw
-    // .map(bid => bid.toNumber())
-    // .filter(bid => bid !== 0)
-
-    // Any bid submission from user address
-    // const filter = contract.filters.SubmitBid(null, null)
-    // contract.on(filter, async (bid, address, amount) => {
-    // TODO need amount? Can't convert toNumber()
-    // console.log("BidSumit event: ", bid.toNumber(), address, amount)
-    // TODO fetch bidCount
-    // const bidCountBN = await contract.getBidCount()
-    // const bidCount = bidCountBN.toNumber()
-    // this.setState({ ...this.state, bidCount })
-    // })
-
     this.setState({
       address,
+      isOwner,
       balance,
       provider,
       gameCount,
-      // bidCount,
-      // maxBids,
-      // remainingBids,
-      // userBids,
       contract,
       userNetwork,
     })
   }
 
-  async submitBid() {
+  async createGame() {
     let tx
 
     try {
-      tx = await this.state.contract.submitBid(this.state.bid, {
-        value: ethers.utils.parseEther("1.0"),
-      })
+      tx = await this.state.contract.createGame(
+        this.state.newGameMaxBids,
+        ethers.utils.parseEther(this.state.newGameBidCost),
+        this.state.newGameMinBidValue,
+        this.state.newGameMaxBidValue
+      )
     } catch (e) {
-      // TODO toast notification(?) that auction is closed?
-      // OR just disable bid submission functionality once remainingBids === 0?
-      let revertMessage = e
+      // TODO toast notification(?)
       if (e.data && e.data.message) {
-        revertMessage = e.data.message.replace(
+        const revertMessage = e.data.message.replace(
           "VM Exception while processing transaction: revert ",
           ""
         )
+        console.error(e)
+        console.error(revertMessage)
       }
-      this.setState({ ...this.state, bid: "" })
+      this.setState({
+        ...this.state,
+        newGameMaxBids: "",
+        newGameBidCost: "",
+        newGameMinBidValue: "",
+        newGameMaxBidValue: "",
+      })
       return
     }
 
@@ -149,34 +158,33 @@ class Admin extends React.Component {
     await tx.wait()
 
     // TODO should we be saving contract in state? Or instantiate when needed?
-    const bidCountBN = await this.state.contract.getBidCount()
-    const bidCount = bidCountBN.toNumber()
+    const gameCountBN = await this.state.contract.getGameCount()
+    const gameCount = gameCountBN.toNumber()
 
-    const remainingBids = this.state.maxBids - bidCount
-
-    // TODO best way fetch this?
-    const userBidsRaw = await this.state.contract.getUserBids()
-    const userBids = userBidsRaw
-      .map(bid => bid.toNumber())
-      .filter(bid => bid !== 0)
-
-    this.setState({ ...this.state, bidCount, remainingBids, userBids, bid: "" })
+    this.setState({
+      ...this.state,
+      gameCount,
+      newGameMaxBids: "",
+      newGameBidCost: "",
+      newGameMinBidValue: "",
+      newGameMaxBidValue: "",
+    })
   }
 
-  // TODO only accept integer inputs
   handleInputChange = event => {
-    this.setState({ ...this.state, bid: event.target.value })
+    const target = event.target
+    this.setState({ ...this.state, [target.name]: target.value })
   }
 
   handleSubmit = event => {
     event.preventDefault()
-    this.submitBid()
+    this.createGame()
   }
 
   render() {
     if (!isMetaMaskInstalled()) {
       return (
-        <div className="App">
+        <Page>
           <section>
             <h1>Hey there!</h1>
             <h1>
@@ -191,7 +199,7 @@ class Admin extends React.Component {
               to use this app.
             </h1>
           </section>
-        </div>
+        </Page>
       )
     }
     if (
@@ -199,7 +207,7 @@ class Admin extends React.Component {
       this.state.userNetwork !== this.state.appNetwork
     ) {
       return (
-        <div className="App">
+        <Page>
           <section>
             <h1>Hey there!</h1>
             <h2>
@@ -211,49 +219,88 @@ class Admin extends React.Component {
               {networkMap[this.state.appNetwork]}" in order to use this app.
             </h2>
           </section>
-        </div>
+        </Page>
       )
     }
+    if (!this.state.isOwner) {
+      return (
+        <Page>
+          <section>
+            <h1>Access denied.</h1>
+          </section>
+        </Page>
+      )
+    }
+
+    const isFormValid =
+      this.state.newGameMaxBids &&
+      this.state.newGameBidCost &&
+      this.state.newGameMinBidValue &&
+      this.state.newGameMaxBidValue
+
     return (
       <div className="App">
         <Header />
-        <section>
-          <h1>Admin page</h1>
-          <h3>User address:</h3>
-          {this.state.address}
-          <h3>User balance:</h3>
-          {this.state.balance}
-          {/* <h3>Max bids:</h3>
-          {this.state.maxBids}
-          <h3>Bid count:</h3>
-          {this.state.bidCount}
-          <h3>Remaining bids:</h3>
-          {this.state.remainingBids}
-          <h3>User bids:</h3>
-          <ul
-            style={{
-              display: `flex`,
-              flexDirection: `column`,
-              alignItems: `center`,
-            }}
-          >
-            {this.state.userBids.map((bid, i) => {
-              return <li key={i}>{bid}</li>
-            })}
-          </ul> */}
+        <Page>
+          <section>
+            <h1>Admin page</h1>
 
-          <h3>Submit bid</h3>
-          <form onSubmit={this.handleSubmit}>
-            <input
-              type="text"
-              value={this.state.bid}
-              onChange={this.handleInputChange}
-              placeholder="New bid..."
-            ></input>
+            <h3>User address:</h3>
+            {this.state.address}
 
-            <button>Set</button>
-          </form>
-        </section>
+            <h3>User balance:</h3>
+            {this.state.balance}
+
+            <h3>Game count:</h3>
+            {this.state.gameCount}
+
+            <h3>Create new game</h3>
+            <Form onSubmit={this.handleSubmit}>
+              <Label>
+                <span>Number of bids:</span>
+                <input
+                  type="text"
+                  name="newGameMaxBids"
+                  value={this.state.newGameMaxBids}
+                  onChange={this.handleInputChange}
+                  placeholder="Max bids..."
+                ></input>
+              </Label>
+              <Label>
+                <span>Bid cost (ETH):</span>
+                <input
+                  type="text"
+                  name="newGameBidCost"
+                  value={this.state.newGameBidCost}
+                  onChange={this.handleInputChange}
+                  placeholder="Bid cost..."
+                ></input>
+              </Label>
+              <Label>
+                <span>Minimum bid value:</span>
+                <input
+                  type="text"
+                  name="newGameMinBidValue"
+                  value={this.state.newGameMinBidValue}
+                  onChange={this.handleInputChange}
+                  placeholder="Min bid value..."
+                ></input>
+              </Label>
+
+              <Label>
+                <span>Maximum bid value:</span>
+                <input
+                  type="text"
+                  name="newGameMaxBidValue"
+                  value={this.state.newGameMaxBidValue}
+                  onChange={this.handleInputChange}
+                  placeholder="Max bid value..."
+                ></input>
+              </Label>
+              <Button disabled={!isFormValid}>Create</Button>
+            </Form>
+          </section>
+        </Page>
         <Footer />
       </div>
     )

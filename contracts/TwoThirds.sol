@@ -13,7 +13,7 @@ contract TwoThirds {
         uint bid;
         address payable bidder;
     }
-    
+
     struct Game {
         uint id;
         mapping(uint256 => Bid) bids;

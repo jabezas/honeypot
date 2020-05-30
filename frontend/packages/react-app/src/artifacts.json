@@ -13,7 +13,7 @@
           {
             "indexed": true,
             "internalType": "uint256",
-            "name": "_index",
+            "name": "_id",
             "type": "uint256"
           },
           {
@@ -56,7 +56,7 @@
           {
             "indexed": true,
             "internalType": "uint256",
-            "name": "_index",
+            "name": "_id",
             "type": "uint256"
           },
           {
@@ -93,7 +93,7 @@
           {
             "indexed": true,
             "internalType": "uint256",
-            "name": "_gameIndex",
+            "name": "_gameId",
             "type": "uint256"
           },
           {
@@ -122,7 +122,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "_gameIndex",
+            "name": "_gameId",
             "type": "uint256"
           }
         ],
@@ -141,7 +141,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "_gameIndex",
+            "name": "_gameId",
             "type": "uint256"
           }
         ],
@@ -188,7 +188,56 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "_gameIndex",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "games",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bidCount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBids",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bidCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address payable",
+            "name": "winner",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
             "type": "uint256"
           }
         ],
@@ -220,7 +269,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "_gameIndex",
+            "name": "_gameId",
             "type": "uint256"
           }
         ],
@@ -239,7 +288,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "_gameIndex",
+            "name": "_gameId",
             "type": "uint256"
           }
         ],
@@ -249,6 +298,24 @@
             "internalType": "address",
             "name": "winner",
             "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getGames",
+        "outputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "ids",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "winners",
+            "type": "address[]"
           }
         ],
         "stateMutability": "view",
@@ -271,7 +338,7 @@
         "inputs": [
           {
             "internalType": "uint256",
-            "name": "_gameIndex",
+            "name": "_gameId",
             "type": "uint256"
           },
           {

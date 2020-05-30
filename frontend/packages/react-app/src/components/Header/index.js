@@ -5,7 +5,7 @@ import logo from "./honeypot-logo.png"
 import metaMaskLogo from "./metamask-logo.png"
 
 const StyledHeader = styled.div`
-  height: 500px;
+  height: 200px;
   width: 100%;
   background: no-repeat url(${header});
 `
