@@ -10,6 +10,7 @@
   "scripts": {
     "test": "buidler test",
     "deploy:local": "npx buidler run --network localhost scripts/deploy.ts",
+    "deploy-with-seeds": "npx buidler run --network localhost scripts/deployWithSeeds.ts",
     "start:node": "npx buidler node",
     "start:app": "cd frontend && yarn react-app:start"
   },

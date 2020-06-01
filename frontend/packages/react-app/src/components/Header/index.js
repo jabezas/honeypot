@@ -5,7 +5,7 @@ import logo from "./honeypot-logo.png"
 import metaMaskLogo from "./metamask-logo.png"
 
 const StyledHeader = styled.div`
-  height: 500px;
+  height: 200px;
   width: 100%;
   background: no-repeat url(${header});
 `
@@ -27,7 +27,9 @@ const Logo = styled.div`
 
 const UserPill = styled.div`
   height: 40px;
-  width: 120px;
+  min-width: 120px;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
   background: white;
   color: black;
   border-radius: 80px;
@@ -44,13 +46,15 @@ const MetaMaskLogo = styled.div`
   background-origin: content-box;
 `
 
-const Header = () => {
+const Header = ({ userAddress, userBalance }) => {
+  console.log({ userAddress, userBalance })
   return (
     <StyledHeader>
       <LogoContainer>
         <Logo />
         <UserPill>
-          $1,000
+          {/* TODO format */}
+          {Math.round(Number(userBalance))} ETH
           <MetaMaskLogo />
         </UserPill>
       </LogoContainer>

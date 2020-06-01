@@ -1,16 +1,101 @@
 {
   "TwoThirds": {
-    "address": "0x038B86d9d8FAFdd0a02ebd1A476432877b0107C8",
+    "address": "0x0078371BDeDE8aAc7DeBfFf451B74c5EDB385Af7",
     "abi": [
       {
         "inputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "constructor"
       },
       {
         "anonymous": false,
         "inputs": [
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "_id",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_maxBids",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_bidCost",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_minBidValue",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_maxBidValue",
+            "type": "uint256"
+          },
+          {
+            "indexed": true,
+            "internalType": "address",
+            "name": "_winner",
+            "type": "address"
+          }
+        ],
+        "name": "CompleteGame",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "_id",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_maxBids",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_bidCost",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_minBidValue",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "_maxBidValue",
+            "type": "uint256"
+          }
+        ],
+        "name": "CreateGame",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          },
           {
             "indexed": true,
             "internalType": "uint256",
@@ -34,24 +119,14 @@
         "type": "event"
       },
       {
-        "constant": true,
-        "inputs": [],
-        "name": "bidCost",
-        "outputs": [
+        "inputs": [
           {
             "internalType": "uint256",
-            "name": "",
+            "name": "_gameId",
             "type": "uint256"
           }
         ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [],
-        "name": "calculateTwoThirdsAverage",
+        "name": "calculateGameTwoThirdsAverage",
         "outputs": [
           {
             "internalType": "uint256",
@@ -59,29 +134,132 @@
             "type": "uint256"
           }
         ],
-        "payable": false,
         "stateMutability": "view",
         "type": "function"
       },
       {
-        "constant": false,
-        "inputs": [],
-        "name": "calculateWinner",
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          }
+        ],
+        "name": "calculateGameWinner",
         "outputs": [
           {
-            "internalType": "address",
+            "internalType": "address payable",
             "name": "_winner",
             "type": "address"
           }
         ],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
       },
       {
-        "constant": true,
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_maxBids",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_bidCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_minBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_maxBidValue",
+            "type": "uint256"
+          }
+        ],
+        "name": "createGame",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "games",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "id",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bidCount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBids",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bidCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address payable",
+            "name": "winner",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
         "inputs": [],
-        "name": "getBidCount",
+        "name": "getAllGames",
+        "outputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "ids",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "winners",
+            "type": "address[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameBidCount",
         "outputs": [
           {
             "internalType": "uint256",
@@ -89,42 +267,123 @@
             "type": "uint256"
           }
         ],
-        "payable": false,
         "stateMutability": "view",
         "type": "function"
       },
       {
-        "constant": true,
         "inputs": [],
-        "name": "getUserBids",
-        "outputs": [
-          {
-            "internalType": "uint256[100]",
-            "name": "userBids",
-            "type": "uint256[100]"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [],
-        "name": "maxBids",
+        "name": "getGameCount",
         "outputs": [
           {
             "internalType": "uint256",
-            "name": "",
+            "name": "gameCount",
             "type": "uint256"
           }
         ],
-        "payable": false,
         "stateMutability": "view",
         "type": "function"
       },
       {
-        "constant": true,
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameData",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "bidCount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBids",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bidCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address payable",
+            "name": "winner",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameUserBids",
+        "outputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "",
+            "type": "uint256[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameWinner",
+        "outputs": [
+          {
+            "internalType": "address",
+            "name": "winner",
+            "type": "address"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "getUserGames",
+        "outputs": [
+          {
+            "internalType": "uint256[]",
+            "name": "ids",
+            "type": "uint256[]"
+          },
+          {
+            "internalType": "address[]",
+            "name": "winners",
+            "type": "address[]"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
         "inputs": [],
         "name": "owner",
         "outputs": [
@@ -134,13 +393,16 @@
             "type": "address"
           }
         ],
-        "payable": false,
         "stateMutability": "view",
         "type": "function"
       },
       {
-        "constant": false,
         "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          },
           {
             "internalType": "uint256",
             "name": "_bid",
@@ -149,23 +411,7 @@
         ],
         "name": "submitBid",
         "outputs": [],
-        "payable": true,
         "stateMutability": "payable",
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [],
-        "name": "winner",
-        "outputs": [
-          {
-            "internalType": "address",
-            "name": "",
-            "type": "address"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "view",
         "type": "function"
       }
     ]

@@ -1,80 +1,184 @@
-pragma solidity ^0.5.1;
+pragma solidity ^0.6.8;
+
+// TODO lint on save
 
 import "@nomiclabs/buidler/console.sol";
 
 contract TwoThirds {
-    event SubmitBid(uint indexed _bid, address indexed _bidder, uint amount); // need amount?
+    event CreateGame(uint indexed _id, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue);
+    event SubmitBid(uint indexed _gameId, uint indexed _bid, address indexed _bidder, uint amount);
+    event CompleteGame(uint indexed _id, uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue, address indexed _winner);
 
     struct Bid {
         uint bid;
         address payable bidder;
     }
-    Bid[] bids;
+
+    struct Game {
+        uint id;
+        mapping(uint256 => Bid) bids;
+        uint bidCount;
+        uint maxBids;
+        uint bidCost;
+        uint minBidValue;
+        uint maxBidValue;
+        address payable winner; // TODO add winningBid?
+    }
+    Game[] public games;
 
     address public owner;
-    address public winner;
-    uint public bidCost = 1000000000000000000; // 1 ETH
-    uint public maxBids = 5;
 
     constructor() public {
-        console.log("Deploying a TwoThirds auction");
+        console.log("Deploying TwoThirds auction contract.");
         owner = msg.sender;
     }
 
-    function submitBid(uint _bid) public payable {
-        require(bids.length < maxBids, "Auction is closed.");
-        require(msg.value >= bidCost, "You must send at least 1 ETH.");
+    function createGame(uint _maxBids, uint _bidCost, uint _minBidValue, uint _maxBidValue) public payable {
+        require(msg.sender == owner, "You don't have permisison to create a game.");
+
+        console.log("Creating a game, id: ", games.length);
+
+        games.push(Game({
+            id: games.length,
+            maxBids: _maxBids,
+            bidCount: 0,
+            bidCost: _bidCost,
+            minBidValue: _minBidValue,
+            maxBidValue: _maxBidValue,
+            winner: address(0)
+        }));
+
+        emit CreateGame(games.length - 1, _maxBids, _bidCost, _minBidValue, _maxBidValue);
+    }
+
+    function submitBid(uint _gameId, uint _bid) public payable {
+        require(games.length > _gameId, "Game doesn't exist.");
+        Game storage game = games[_gameId];
+
+        require(game.bidCount < game.maxBids, "Game is closed.");
+        // TODO how to include game values in revert messages?
+        require(msg.value >= game.bidCost, "You did not send enough ETH.");
+        require(game.minBidValue <= _bid, "Bid is too low.");
+        require(game.maxBidValue >= _bid, "Bid is too high.");
 
         console.log("Submitting a bid: ", _bid);
         console.log("Bid value: ", msg.value);
-        bids.push(Bid({ bid: _bid, bidder: msg.sender }));
-        emit SubmitBid(_bid, msg.sender, msg.value);
+
+        game.bids[game.bidCount] = Bid({ bid: _bid, bidder: msg.sender });
+        game.bidCount++;
+        emit SubmitBid(_gameId, _bid, msg.sender, msg.value);
     }
 
-    function calculateWinner() public returns (address _winner) {
-        require(bids.length == maxBids, "Auction is still open");
-        uint256 twoThirdsAverage = calculateTwoThirdsAverage();
-        int256 lowestDifference = 100.0;
+    function calculateGameWinner(uint _gameId) public returns (address payable _winner) {
+        Game storage game = games[_gameId];
+        require(game.bidCount == game.maxBids, "Game is still open.");
+        uint256 twoThirdsAverage = calculateGameTwoThirdsAverage(_gameId);
 
-        for (uint i = 0; i < bids.length; i++) {
-            int256 diff = int256(bids[i].bid - twoThirdsAverage);
+        int256 lowestDifference = int256(game.maxBidValue);
+
+        for (uint i = 0; i < game.bidCount; i++) {
+            int256 diff = int256(game.bids[i].bid - twoThirdsAverage);
             if (diff < 0) {
                 diff = diff * -1; // get absolute diff - is there a better way?
             }
             if (diff < lowestDifference) {
                 lowestDifference = diff;
-                _winner = bids[i].bidder;
+                _winner = game.bids[i].bidder;
             }
         }
-        winner = _winner;
+        game.winner = _winner;
+        emit CompleteGame(_gameId, game.maxBids, game.bidCost, game.minBidValue, game.maxBidValue, _winner);
         return _winner;
     }
 
     // VIEWS
 
-    function calculateTwoThirdsAverage() public view returns (uint256 twoThirdsAverage) {
-        require(bids.length == maxBids, "Auction is still open");
+    function calculateGameTwoThirdsAverage(uint _gameId) public view returns (uint256 twoThirdsAverage) {
+        Game storage game = games[_gameId];
+        require(game.bidCount == game.maxBids, "Game is still open.");
+
         uint total;
-        for (uint i = 0; i < bids.length; i++) {
-            total += bids[i].bid;
+        for (uint i = 0; i < game.bidCount; i++) {
+            total += game.bids[i].bid;
         }
-        uint256 average = total / bids.length;
+        uint256 average = total / game.bidCount;
         return average * 2 / 3;
     }
 
-
-    function getBidCount() public view returns (uint bidCount) {
-        return bids.length;
+    function getGameCount() public view returns (uint gameCount) {
+        return games.length;
     }
 
-    function getUserBids() public view returns (uint[100] memory userBids) {
+    // TODO better way? Appears Solidity public functions cannot return structs
+    function getGameData(uint _gameId) public view returns
+    (
+        uint bidCount,
+        uint maxBids,
+        uint bidCost,
+        uint minBidValue,
+        uint maxBidValue,
+        address payable winner
+    ) {
+        return (
+            games[_gameId].bidCount,
+            games[_gameId].maxBids,
+            games[_gameId].bidCost,
+            games[_gameId].minBidValue,
+            games[_gameId].maxBidValue,
+            games[_gameId].winner
+        );
+    }
+
+    function getGameBidCount(uint _gameId) public view returns (uint bidCount) {
+        return games[_gameId].bidCount;
+    }
+
+    function getGameWinner(uint _gameId) public view returns (address winner) {
+        return games[_gameId].winner;
+    }
+
+    function getGameUserBids(uint _gameId) public view returns (uint[] memory) {
+        Game storage game = games[_gameId];
+        uint[] memory userBids = new uint[](game.bidCount);
+
         uint index = 0;
-        for (uint i = 0; i < bids.length; i++) {
-            if (bids[i].bidder == msg.sender) {
-                userBids[index] = bids[i].bid;
+        for (uint i = 0; i < game.bidCount; i++) {
+            if (game.bids[i].bidder == msg.sender) {
+                userBids[index] = game.bids[i].bid;
                 index++;
             }
         }
         return userBids;
+    }
+
+    function getUserGames() public view returns (uint[] memory ids, address[] memory winners) {
+        uint index = 0;
+        address[] memory winners = new address[](games.length);
+        uint[]    memory ids = new uint[](games.length);
+
+        for (uint i = 0; i < games.length; i++) {
+            if (games[i].bidCount == games[i].maxBids) {
+                for (uint j = 0; j < games[i].bidCount; j++){
+                    if (games[i].bids[j].bidder == msg.sender) {
+                        winners[index] = games[i].winner;
+                        ids[index] = games[i].id;
+                        index++;
+                        break;
+                    }
+                }
+            }
+        }
+        return (ids, winners);
+    }
+
+    function getAllGames() public view returns (uint[] memory ids, address[] memory winners) {
+        uint[]    memory ids = new uint[](games.length);
+        address[] memory winners = new address[](games.length);
+
+        for (uint i = 0; i < games.length; i++) {
+            ids[i] = games[i].id;
+            winners[i] = games[i].winner;
+        }
+        return (ids, winners);
     }
 }
