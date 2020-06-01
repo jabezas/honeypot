@@ -42,3 +42,17 @@ First screen: Connect wallet & game explanation
   - Default game state (showing existing bids)
   - Bid being selected
   - Reveal phase
+
+App routing
+- Home page
+  - List of all open games? Click into "game detail" view?
+  - List of all games user had submitted bids
+- Game page
+  - Game details: # of total bids, # of bids submitted, cost per bid, min & max valid bid values
+  - Form / UI interaction to submit a bid (triggering a MetaMask transaction)
+- Admin page
+  - Form to create new games (triggering a MetaMask transaction)
+  - List of all games
+  - List of all games that are completed & need to calculate a winner?
+
+

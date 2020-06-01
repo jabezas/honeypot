@@ -93,9 +93,6 @@ contract TwoThirds {
 
     // VIEWS
 
-    // TODO how to fetch games?
-    // TODO how to fetch all games a user has bids in?
-
     function calculateGameTwoThirdsAverage(uint _gameId) public view returns (uint256 twoThirdsAverage) {
         Game storage game = games[_gameId];
         require(game.bidCount == game.maxBids, "Game is still open.");
@@ -110,6 +107,26 @@ contract TwoThirds {
 
     function getGameCount() public view returns (uint gameCount) {
         return games.length;
+    }
+
+    // TODO better way? Appears Solidity public functions cannot return structs
+    function getGameData(uint _gameId) public view returns
+    (
+        uint bidCount,
+        uint maxBids,
+        uint bidCost,
+        uint minBidValue,
+        uint maxBidValue,
+        address payable winner
+    ) {
+        return (
+            games[_gameId].bidCount,
+            games[_gameId].maxBids,
+            games[_gameId].bidCost,
+            games[_gameId].minBidValue,
+            games[_gameId].maxBidValue,
+            games[_gameId].winner
+        );
     }
 
     function getGameBidCount(uint _gameId) public view returns (uint bidCount) {

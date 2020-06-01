@@ -15,7 +15,7 @@ describe("TwoThirds contract", () => {
     )
   })
 
-  it.only("should allow game creation", async () => {
+  it("should allow game creation", async () => {
     const factory = await ethers.getContractFactory("TwoThirds")
     const contract = await factory.deploy()
 
@@ -224,7 +224,7 @@ describe("TwoThirds contract", () => {
     )
   })
 
-  it("should complete a game", async () => {
+  it.only("should complete a game", async () => {
     const factory = await ethers.getContractFactory("TwoThirds")
     const contract = await factory.deploy()
 
@@ -239,6 +239,7 @@ describe("TwoThirds contract", () => {
       "10"
     )
 
+    // Submit bids to game w/ gameId `0`
     await contractWithAccountSigner.submitBid("0", "3", {
       value: ethers.utils.parseEther("1.0"),
     })
@@ -277,8 +278,7 @@ describe("TwoThirds contract", () => {
     expect(winner).to.equal(account._address)
 
     // Query games
-    const gameData = await contractWithAccountSigner.getUserGames()
-    const [gameIds, winners] = gameData
+    const [gameIds, winners] = await contractWithAccountSigner.getUserGames()
     const games = []
 
     for (i = 0; i < gameIds.length; i++) {
@@ -291,5 +291,13 @@ describe("TwoThirds contract", () => {
 
     expect(games[0].id.toNumber()).to.equal(0)
     expect(games[0].winner).to.equal(account._address)
+
+    const gameData = await contractWithAccountSigner.getGameData("0")
+    expect(gameData.bidCount.toNumber()).to.equal(5)
+    expect(gameData.maxBids.toNumber()).to.equal(5)
+    expect(ethers.utils.formatEther(gameData.bidCost)).to.equal("1.0")
+    expect(gameData.minBidValue.toNumber()).to.equal(1)
+    expect(gameData.maxBidValue.toNumber()).to.equal(10)
+    expect(gameData.winner).to.equal(account._address)
   })
 })
