@@ -1,6 +1,6 @@
 {
   "TwoThirds": {
-    "address": "0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F",
+    "address": "0x0078371BDeDE8aAc7DeBfFf451B74c5EDB385Af7",
     "abi": [
       {
         "inputs": [],
@@ -278,6 +278,50 @@
             "internalType": "uint256",
             "name": "gameCount",
             "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "internalType": "uint256",
+            "name": "_gameId",
+            "type": "uint256"
+          }
+        ],
+        "name": "getGameData",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "bidCount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBids",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bidCost",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxBidValue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address payable",
+            "name": "winner",
+            "type": "address"
           }
         ],
         "stateMutability": "view",

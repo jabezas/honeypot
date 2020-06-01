@@ -2,33 +2,7 @@ import React from "react"
 import { ethers } from "ethers"
 import styled from "styled-components"
 
-import Header from "../Header/index.js"
-import Footer from "../Footer/index.js"
-import artifacts from "../../artifacts.json"
-
-const isMetaMaskInstalled = () => {
-  const { ethereum } = window
-  return Boolean(ethereum && ethereum.isMetaMask)
-}
-
-const networkMap = {
-  "1": "Main Ethereum Network",
-  "2": "Morden Test network",
-  "3": "Ropsten Test Network",
-  "4": "Rinkeby Test Network",
-  "5": "Goerli Test Network",
-  "42": "Kovan Test Network",
-  "31337": "Localhost 8545",
-}
-
-const Page = styled.div`
-  padding: 5rem 10rem;
-  display: flex;
-`
-
-const Section = styled.section`
-  flex: 0 0 50%;
-`
+import { Section } from "../SharedStyledComponents"
 
 const Form = styled.form`
   display: flex;
@@ -53,13 +27,7 @@ class Admin extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      appNetwork: "31337", // TODO change once deployed
-      userNetwork: "",
-      address: "",
       isOwner: false,
-      balance: "",
-      provider: {},
-      gameCount: "",
       games: [],
       // form data
       newGameMaxBids: "",
@@ -70,55 +38,10 @@ class Admin extends React.Component {
   }
 
   async componentDidMount() {
-    const { ethereum } = window
-    if (ethereum === undefined) {
-      return
-    }
+    const owner = await this.props.contract.owner()
+    const isOwner = this.props.userAddress === owner.toLowerCase()
 
-    // I believe we want to `ethereum`for this? Looks like window.web3 will stop being injected by 8/31/20:
-    // https://github.com/MetaMask/metamask-extension/issues/8077#issuecomment-622191567
-    // const provider = await new ethers.providers.Web3Provider(ethereum)
-    const provider = await new ethers.providers.Web3Provider(
-      window.web3.currentProvider
-    )
-
-    // TODO when do we want to display this? After onboarding?
-    // TODO updated, this is deprecated:
-    // https://docs.metamask.io/guide/ethereum-provider.html#methods-new-api
-    await ethereum.enable()
-
-    // Check user's Ethereum network
-    // TODO update, this is deprecated:
-    // https://docs.metamask.io/guide/ethereum-provider.html#ethereum-networkversion-deprecated
-    // Changing network will no longer reload the page
-    // Use `chainChanged`? OR ether.js's getNetwork()?
-    const userNetwork = ethereum.networkVersion
-    if (userNetwork !== this.state.appNetwork) {
-      this.setState({ ...this.state, userNetwork })
-      return
-    }
-
-    // TODO update, this is deprecated: https://docs.metamask.io/guide/ethereum-provider.html#ethereum-selectedaddress-deprecated
-    // Use provider.getSigner().getAddress() ?
-    const address = ethereum.selectedAddress
-    let balance = await provider.getBalance(address)
-    balance = ethers.utils.formatEther(balance)
-
-    // connect the contract with a signer, which allows update methods
-    // vs. connecting via a Provider, which provides read-only access
-    const contract = new ethers.Contract(
-      artifacts.TwoThirds.address,
-      artifacts.TwoThirds.abi,
-      provider.getSigner()
-    )
-
-    const owner = await contract.owner()
-    const isOwner = address === owner.toLowerCase()
-
-    const gameCountBN = await contract.getGameCount()
-    const gameCount = gameCountBN.toNumber()
-
-    const gamesData = await contract.getAllGames()
+    const gamesData = await this.props.contract.getAllGames()
     const [gameIds, winners] = gamesData
     const games = gameIds.map(id => {
       return {
@@ -128,14 +51,8 @@ class Admin extends React.Component {
     })
 
     this.setState({
-      address,
       isOwner,
-      balance,
-      provider,
-      gameCount,
       games,
-      contract,
-      userNetwork,
     })
   }
 
@@ -143,7 +60,7 @@ class Admin extends React.Component {
     let tx
 
     try {
-      tx = await this.state.contract.createGame(
+      tx = await this.props.contract.createGame(
         this.state.newGameMaxBids,
         ethers.utils.parseEther(this.state.newGameBidCost),
         this.state.newGameMinBidValue,
@@ -174,10 +91,7 @@ class Admin extends React.Component {
     await tx.wait()
 
     // TODO should we be saving contract in state? Or instantiate when needed?
-    const gameCountBN = await this.state.contract.getGameCount()
-    const gameCount = gameCountBN.toNumber()
-
-    const gamesData = await this.state.contract.getAllGames()
+    const gamesData = await this.props.contract.getAllGames()
     const [gameIds, winners] = gamesData
     const games = gameIds.map(id => {
       return {
@@ -186,9 +100,10 @@ class Admin extends React.Component {
       }
     })
 
+    // TODO for each game, fetch gameData
+
     this.setState({
       ...this.state,
-      gameCount,
       games,
       newGameMaxBids: "",
       newGameBidCost: "",
@@ -208,53 +123,11 @@ class Admin extends React.Component {
   }
 
   render() {
-    if (!isMetaMaskInstalled()) {
-      return (
-        <Page>
-          <section>
-            <h1>Hey there!</h1>
-            <h1>
-              You need to{" "}
-              <a
-                href="https://metamask.io/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                install MetaMask
-              </a>{" "}
-              to use this app.
-            </h1>
-          </section>
-        </Page>
-      )
-    }
-    if (
-      this.state.userNetwork &&
-      this.state.userNetwork !== this.state.appNetwork
-    ) {
-      return (
-        <Page>
-          <section>
-            <h1>Hey there!</h1>
-            <h2>
-              Your Ethereum network is currently set to the "
-              {networkMap[this.state.userNetwork]}".
-            </h2>
-            <h2>
-              You must change your network to "
-              {networkMap[this.state.appNetwork]}" in order to use this app.
-            </h2>
-          </section>
-        </Page>
-      )
-    }
     if (!this.state.isOwner) {
       return (
-        <Page>
-          <section>
-            <h1>Access denied.</h1>
-          </section>
-        </Page>
+        <Section>
+          <h1>Access denied.</h1>
+        </Section>
       )
     }
 
@@ -265,81 +138,71 @@ class Admin extends React.Component {
       this.state.newGameMaxBidValue
 
     return (
-      <div className="App">
-        <Header />
-        <Page>
-          <Section>
-            <h1>Admin page</h1>
+      <div>
+        <Section>
+          <h1>Admin page</h1>
 
-            <h3>User address:</h3>
-            {this.state.address}
+          <h3>Game count:</h3>
+          {this.state.games.length}
 
-            <h3>User balance:</h3>
-            {this.state.balance}
+          <h3>Create new game</h3>
+          <Form onSubmit={this.handleSubmit}>
+            <Label>
+              <span>Number of bids:</span>
+              <input
+                type="text"
+                name="newGameMaxBids"
+                value={this.state.newGameMaxBids}
+                onChange={this.handleInputChange}
+                placeholder="Max bids..."
+              ></input>
+            </Label>
+            <Label>
+              <span>Bid cost (ETH):</span>
+              <input
+                type="text"
+                name="newGameBidCost"
+                value={this.state.newGameBidCost}
+                onChange={this.handleInputChange}
+                placeholder="Bid cost..."
+              ></input>
+            </Label>
+            <Label>
+              <span>Minimum bid value:</span>
+              <input
+                type="text"
+                name="newGameMinBidValue"
+                value={this.state.newGameMinBidValue}
+                onChange={this.handleInputChange}
+                placeholder="Min bid value..."
+              ></input>
+            </Label>
 
-            <h3>Game count:</h3>
-            {this.state.gameCount}
-
-            <h3>Create new game</h3>
-            <Form onSubmit={this.handleSubmit}>
-              <Label>
-                <span>Number of bids:</span>
-                <input
-                  type="text"
-                  name="newGameMaxBids"
-                  value={this.state.newGameMaxBids}
-                  onChange={this.handleInputChange}
-                  placeholder="Max bids..."
-                ></input>
-              </Label>
-              <Label>
-                <span>Bid cost (ETH):</span>
-                <input
-                  type="text"
-                  name="newGameBidCost"
-                  value={this.state.newGameBidCost}
-                  onChange={this.handleInputChange}
-                  placeholder="Bid cost..."
-                ></input>
-              </Label>
-              <Label>
-                <span>Minimum bid value:</span>
-                <input
-                  type="text"
-                  name="newGameMinBidValue"
-                  value={this.state.newGameMinBidValue}
-                  onChange={this.handleInputChange}
-                  placeholder="Min bid value..."
-                ></input>
-              </Label>
-
-              <Label>
-                <span>Maximum bid value:</span>
-                <input
-                  type="text"
-                  name="newGameMaxBidValue"
-                  value={this.state.newGameMaxBidValue}
-                  onChange={this.handleInputChange}
-                  placeholder="Max bid value..."
-                ></input>
-              </Label>
-              <Button disabled={!isFormValid}>Create</Button>
-            </Form>
-          </Section>
-          <Section>
-            <h3>View games</h3>
-            <ul>
-              {this.state.games.map(game => {
-                return (
-                  <li key={game.id}>
-                    Game {game.id} winner: {game.winner}
-                  </li>
-                )
-              })}
-            </ul>
-          </Section>
-        </Page>
-        <Footer />
+            <Label>
+              <span>Maximum bid value:</span>
+              <input
+                type="text"
+                name="newGameMaxBidValue"
+                value={this.state.newGameMaxBidValue}
+                onChange={this.handleInputChange}
+                placeholder="Max bid value..."
+              ></input>
+            </Label>
+            <Button disabled={!isFormValid}>Create</Button>
+          </Form>
+        </Section>
+        <Section>
+          <h3>View games</h3>
+          <ul>
+            {this.state.games.map(game => {
+              return (
+                <li key={game.id}>
+                  Game {game.id} winner: {game.winner}
+                </li>
+              )
+            })}
+          </ul>
+        </Section>
       </div>
     )
   }
